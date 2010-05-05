@@ -2,6 +2,9 @@
 //Grant Elliott
 //August 2005
 
+// Modified by Dataman, aka Charley Jones, 5/2010
+// Added support for History Snapshots to counter oscillations
+
 #define F_CPU 8000000UL
 
 #include <stdio.h>
@@ -11,8 +14,13 @@
 #include "life.h"
 
 uint8_t compatmode = 0;
-volatile uint16_t colony, lastcolony;
+volatile uint16_t colony;  //dataman: history takes place of lastcolony    
 volatile uint8_t mode = AWAKE;
+
+// Dataman, start of patch               
+#define MAXHISTORY 16                                // Maximum # of snapshots
+volatile uint16_t history[MAXHISTORY];       // Snapshot history
+volatile uint8_t t;                                                // Loop variable
 
 
 #include "lifecomm.c"
@@ -59,7 +67,8 @@ int main()
     transmit(3,&fetch_trans_data);
     while (inprogress()) {}
 
-    lastcolony = colony;
+    //dataman, skip save for now
+    //lastcolony = colony;
     evolve();
 
     if (!compatmode) {
@@ -67,17 +76,32 @@ int main()
 	deadcount++;
       } else {
 	deadcount = 0;
-      }
-      if (colony == lastcolony) {
-	staticcount++;
-      } else {
-	staticcount = 0;
-      }
+      // dataman: revise check
+      // optimize. only perform if not dead.
+      // }
+      //if (colony == lastcolony) {
+      //staticcount++;
+      //} else {
+      //staticcount = 0;
+      //}
+      // instead, we scan history looking for a match.
+      // setting static count up if matched, else, back to zero.
+	for (t=0;t<MAXHISTORY;t++)
+	{if (history[t]==colony) {staticcount++; break;}}
+	if (t==MAXHISTORY) {staticcount=0;}
+       }
+
       
       if ((deadcount == RESPAWN) || (staticcount == RESPAWN*2) && !compatmode) {
 	staticcount = deadcount = 0;
 	set_random();
       }
+	else // dataman: if not dead or static, save history by shifting right
+	{
+	for(t=MAXHISTORY-1;t>0;t--)
+	{history[t]=history[t-1];}
+	history[0]=colony;
+	}
     }
   }
   return 0;
@@ -205,6 +229,9 @@ void set_random()
     _delay_ms(2);
     t2|=(read_adc(7)&0b00000001)<<i;
     _delay_ms(2);
+  // dataman: last hack, on random, reset history to empty
+  for (t=0;t<MAXHISTORY;t++) 
+   {history[t]=0xFFFF;};
   }
   
   //t2 = 0xFF;
