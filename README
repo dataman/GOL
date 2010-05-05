@@ -7,3 +7,8 @@ by Datamn, aka Charley Jones, GOL@CRJones.Com
 GitHub.Com/Dataman/GOL
 Also distributed under the GPL.
 
+Only one 1.4 chip is needed in GOL array to stop oscillations.
+One 1.4 will monitor up to 16 historical snapshots looking for similar 
+identical patterns.  After 50 such comparisons, the 1.4 board will inject
+a random pattern resetting the array.
+
