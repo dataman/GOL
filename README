@@ -12,3 +12,6 @@ One 1.4 will monitor up to 16 historical snapshots looking for
 identical patterns.  After 50 such comparisons, the 1.4 board will inject
 a random pattern resetting the array.
 
+A video demonstrating this patch is at:
+http://www.vimeo.com/11501143
+
